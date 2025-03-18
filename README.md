@@ -146,7 +146,7 @@ curl -X POST http://127.0.0.1:5000/reload
 
 #### Predict Price
 
-To predict a rental price, you can use the `/predict` endpoint. Here's an example request:
+To predict a job salary, you can use the `/predict` endpoint. Here's an example request:
 
 ```bash
 curl -X POST http://127.0.0.1:5000/predict \
