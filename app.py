@@ -6,7 +6,6 @@ from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 import numpy as np
 import requests
-import gzip
 from io import BytesIO
 from flasgger import Swagger
 
@@ -14,122 +13,122 @@ app = Flask(__name__)
 
 # Swagger config
 app.config['SWAGGER'] = {
-    'title': 'Airbnb Rental Price Prediction API',
+    'title': 'Data Job Salary Prediction API',
     'uiversion': 3
 }
 swagger = Swagger(app)
 
 # SQLite DB setup
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///listings.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///salaries.db'
 db = SQLAlchemy(app)
 
 # Define a database model
 class Listing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    price = db.Column(db.Float, nullable=False)
-    bedrooms = db.Column(db.Integer, nullable=False)
-    bathrooms = db.Column(db.Float, nullable=False)
-    accommodates = db.Column(db.Integer, nullable=False)
-    neighbourhood = db.Column(db.String(100), nullable=False)
+    salary = db.Column(db.Integer, nullable=False)
+    remote = db.Column(db.Integer, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    job = db.Column(db.String(100), nullable=False)
 
 # Create the database
 with app.app_context():
     db.create_all()
 
 def preprocess_data(df):
-    # Clean the price column
-    df['price'] = df['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
-
     # Drop rows where any of the key fields are NaN
-    df = df.dropna(subset=['price', 'bedrooms', 'bathrooms', 'accommodates', 'neighbourhood_cleansed'])
+    df = df.dropna(subset=['salary_in_usd', 'remote_ratio', 'work_year', 'company_location', 'job_title'])
 
-    # One more time, fill any missing numerical values with the median, just in case
-    df['bedrooms'] = df['bedrooms'].fillna(df['bedrooms'].median())
-    df['bathrooms'] = df['bathrooms'].fillna(df['bathrooms'].median())
-    df['accommodates'] = df['accommodates'].fillna(df['accommodates'].median())
+    # Fill missing numerical values with the median
+    df['salary_in_usd'] = df['salary_in_usd'].fillna(df['salary_in_usd'].median())
 
-    # Fill missing categorical values (neighbourhood) with the most frequent value
-    df['neighbourhood_cleansed'] = df['neighbourhood_cleansed'].fillna(df['neighbourhood_cleansed'].mode()[0])
+    # Fill missing categorical values (company_location) with the most frequent value
+    df['company_location'] = df['company_location'].fillna(df['company_location'].mode()[0])
 
-    # One-hot encode the 'neighbourhood_cleansed' column
+    # One-hot encode the 'job_title' column
     encoder = OneHotEncoder(sparse_output=False)
-    neighbourhood_encoded = encoder.fit_transform(df[['neighbourhood_cleansed']])
+    jobs_encoded = encoder.fit_transform(df[['job_title']])
+    
+    # One-hot encode the 'company_location' column
+    encoder2 = OneHotEncoder(sparse_output=False)
+    location_encoded = encoder.fit_transform(df[['company_location']])
 
-    # Create a DataFrame for the one-hot encoded neighborhoods
-    neighbourhood_encoded_df = pd.DataFrame(neighbourhood_encoded, columns=encoder.get_feature_names_out(['neighbourhood_cleansed']))
+    # Create a DataFrame for the one-hot encoded job titles and company locations
+    jobs_encoded_df = pd.DataFrame(jobs_encoded, columns=encoder.get_feature_names_out(['job_title']))
+    locations_encoded_df = pd.DataFrame(location_encoded, columns=encoder.get_feature_names_out(['company_location']))
 
-    # Concatenate the encoded neighborhood with the original dataframe
-    df = pd.concat([df, neighbourhood_encoded_df], axis=1).drop(columns=['neighbourhood_cleansed'])
+    # Concatenate the encoded job titles with the original dataframe and drop the 'job_title' column
+    df = pd.concat([df, jobs_encoded_df, locations_encoded_df], axis=1).drop(columns=['job_title', 'company_location'])
 
-    # Drop any rows that still have NaN values at this point (forcefully)
+    # Drop any rows that still have NaN values at this point
     df = df.dropna()
-    return df, encoder
+    return df, encoder, encoder2
 
 # Global variables for model and encoder
 model = None
 encoder = None
+encoder2 = None
 
 @app.route('/reload', methods=['POST'])
 def reload_data():
     '''
-    Reload data from the Airbnb dataset, clear the database, load new data, and return summary stats
+    Reload data from the Data Science Job dataset, clear the database, load new data, and return summary stats
     ---
     responses:
       200:
         description: Summary statistics of reloaded data
     '''
-    global model, encoder
+    global model, encoder, encoder2
 
-    # Step 1: Download and decompress data
-    url = 'https://data.insideairbnb.com/united-states/ma/boston/2024-06-22/data/listings.csv.gz'
-    response = requests.get(url)
-    compressed_file = BytesIO(response.content)
-    decompressed_file = gzip.GzipFile(fileobj=compressed_file)
+    # Step 1: Download data
+    #url = 'https://www.kaggle.com/datasets/saurabhbadole/latest-data-science-job-salaries-2024/data/DataScience_salaries_2025.csv'
+    #response = requests.get(url)
+    #csv_file = BytesIO(response.content)
+    csv_file = '~/Downloads/DataScience_salaries_2025.csv'
 
     # Step 2: Load data into pandas
-    listings = pd.read_csv(decompressed_file)
+    jobs = pd.read_csv(csv_file)
 
     # Step 3: Clear the database
     db.session.query(Listing).delete()
 
     # Step 4: Process data and insert it into the database
-    listings = listings[['price', 'bedrooms', 'bathrooms', 'accommodates', 'neighbourhood_cleansed']].dropna()
-    listings['price'] = listings['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
+    jobs = jobs[['salary_in_usd', 'remote_ratio', 'work_year', 'company_location', 'job_title']].dropna()
 
-    for _, row in listings.iterrows():
-        new_listing = Listing(
-            price=row['price'],
-            bedrooms=int(row['bedrooms']),
-            bathrooms=row['bathrooms'],
-            accommodates=int(row['accommodates']),
-            neighbourhood=row['neighbourhood_cleansed']
-        )
-        db.session.add(new_listing)
+    for _, row in jobs.iterrows():
+        new_job = Listing(
+            salary = row['salary_in_usd'],
+            remote = row['remote_ratio'],
+            year =row['work_year'],  
+            location = row['company_location'],  
+            job = row['job_title'])
+        
+        db.session.add(new_job)
     db.session.commit()
 
     # Step 5: Preprocess and train model
-    df, encoder = preprocess_data(listings)
-    X = df.drop(columns='price')
-    y = df['price']
+    df, encoder, encoder2 = preprocess_data(jobs)
+    X = df.drop(columns='salary')
+    y = df['salary']
     model = LinearRegression()
     model.fit(X, y)
 
     # Step 6: Generate summary statistics
     summary = {
-        'total_listings': len(listings),
-        'average_price': listings['price'].mean(),
-        'min_price': listings['price'].min(),
-        'max_price': listings['price'].max(),
-        'average_bedrooms': listings['bedrooms'].mean(),
-        'average_bathrooms': listings['bathrooms'].mean(),
-        'top_neighbourhoods': listings['neighbourhood_cleansed'].value_counts().head().to_dict()
+        'total_jobs': len(jobs),
+        'average_salary': jobs['salary_in_usd'].mean(),
+        'min_salary': jobs['salary_in_usd'].min(),
+        'max_salary': jobs['salary_in_usd'].max(),
+        'average_remote': jobs['remote_ratio'].mean(),
+        'top_jobs': jobs['job_title'].value_counts().head().to_dict()
     }
 
     return jsonify(summary)
+
 @app.route('/predict', methods=['POST'])
 def predict():
     '''
-    Predict the rental price for an Airbnb listing
+    Predict the salary for a data science job listing
     ---
     parameters:
       - name: body
@@ -138,60 +137,57 @@ def predict():
         schema:
           type: object
           properties:
-            bedrooms:
-              type: integer
-            bathrooms:
-              type: number
-            accommodates:
-              type: integer
-            neighbourhood_cleansed:
+            job_title:
               type: string
+            remote_ratio:
+              type: number
+            company_location:
+              type: string
+            work_year:
+              type: integer
     responses:
       200:
-        description: Predicted rental price
+        description: Predicted salary
     '''
-    global model, encoder  # Ensure that the encoder and model are available for prediction
+    global model, encoder, encoder2  # Ensure that the encoder and model are available for prediction
 
-    # Define the list of valid neighborhoods
-    valid_neighborhoods = [
-        "East Boston", "Roxbury", "Beacon Hill", "Back Bay", "North End", "Dorchester",
-        "Charlestown", "Jamaica Plain", "Downtown", "South Boston", "Bay Village",
-        "Brighton", "West Roxbury", "Roslindale", "South End", "Mission Hill",
-        "Fenway", "Allston", "Hyde Park", "West End", "Mattapan", "Leather District",
-        "South Boston Waterfront", "Chinatown", "Longwood Medical Area"
+    # Define the list of valid job titles
+    valid_jobs = [
+        "Research Scientist", "AI Engineer", "Data Analyst", "Associate", "Consultant", "Engineer",
+        "Machine Learning Engineer", "Product Manager", "Software Engineer", "Research Scientist", "Research Engineer",
+        "Systems Engineer", "Data Architect", "Data Governance", "Business Analyst", "AI Architect",
+        "Architect", "BI Developer", "Business Intelligence Analyst", "Cloud Engineer", "Data Lead", "Research Associate",
+        "Head of Data"
     ]
 
     # Check if the model and encoder are initialized
-    if model is None or encoder is None:
+    if model is None or encoder is None or encoder2 is None:
         return jsonify({"error": "The data has not been loaded. Please refresh the data by calling the '/reload' endpoint first."}), 400
 
     data = request.json
     try:
-        bedrooms = pd.to_numeric(data.get('bedrooms'), errors='coerce')
-        bathrooms = pd.to_numeric(data.get('bathrooms'), errors='coerce')
-        accommodates = pd.to_numeric(data.get('accommodates'), errors='coerce')
-        neighbourhood = data.get('neighbourhood_cleansed')
+        jobs = data.get('job_title')
+        remote = pd.to_numeric(data.get('remote_ratio'), errors='coerce')
+        year = data.get('work_year')
+        location = data.get('company_location')
 
-        if None in [bedrooms, bathrooms, accommodates, neighbourhood]:
+        if None in [job_title, remote, location, year]:
             return jsonify({"error": "Missing or invalid required parameters"}), 400
 
-        # Check if the neighborhood is valid
-        if neighbourhood not in valid_neighborhoods:
-            return jsonify({"error": f"Invalid neighborhood. Please choose one of the following: {', '.join(valid_neighborhoods)}"}), 400
-
-        # Check for NaN values in the converted inputs
-        if pd.isna(bedrooms) or pd.isna(bathrooms) or pd.isna(accommodates):
-            return jsonify({"error": "Invalid numeric values for bedrooms, bathrooms, or accommodates"}), 400
+        # Check if the job title is valid
+        if job_title not in valid_jobs:
+            return jsonify({"error": f"Invalid job title. Please choose one of the following: {', '.join(valid_jobs)}"}), 400
 
         # Transform the input using the global encoder
-        neighbourhood_encoded = encoder.transform([[neighbourhood]])
-        input_data = np.concatenate(([bedrooms, bathrooms, accommodates], neighbourhood_encoded[0]))
+        job_encoded = encoder.transform([[jobs]])
+        location_encoded = encoder2.transform([[location]])
+        input_data = np.concatenate(([remote, year], job_encoded[0], location_encoded[0]))
         input_data = input_data.reshape(1, -1)
 
-        # Predict the price
-        predicted_price = model.predict(input_data)[0]
+        # Predict the salary
+        predicted_salary = model.predict(input_data)[0]
 
-        return jsonify({"predicted_price": predicted_price})
+        return jsonify({"predicted_salary": predicted_salary})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
