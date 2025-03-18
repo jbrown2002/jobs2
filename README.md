@@ -43,9 +43,10 @@ Before you can set up and run this app, ensure you have the following software i
 ## Setting up on macOS and Windows
 
 ### 1. Clone the Repository
+
 First, clone this repository to your local machine:
 ```bash
-git clone https://github.com/jbrown2002/jobs.git
+git clone https://github.com/jbrown2002/jobs2.git
 cd jobs
 ```
 ### 2. 
@@ -55,6 +56,7 @@ Second, download the data to your local device using this code:
 pip install kaggle
 kaggle datasets download -d saurabhbadole/latest-data-science-job-salaries-2024
 ```
+Note: To access this dataset, you will need a Kaggle account, which can be done at [Kaggle](https://www.kaggle.com/)
 
 ### 3. 
 Lastly, unzip the data file on your local device and read it into the API using this code:
@@ -164,7 +166,7 @@ curl -X POST http://127.0.0.1:5000/predict \
     "remote_ratio": 0,
     "company_location": "US",
     "job_title": "AI Architect",
-    "work_year": 2025
+    "work_year": 2023
 }'
 ```
 
