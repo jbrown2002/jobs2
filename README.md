@@ -52,7 +52,7 @@ cd jobs
 ```
 ### 2. 
 
-Second, ** download ** the data to your local device from the files in this repository
+Second, **download** the data to your local device from the file in this repository (Named: DataScience_salaries_2025.csv)
 
 ### 3. Create a Virtual Environment (Optional but Recommended)
 
