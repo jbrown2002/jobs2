@@ -3,25 +3,28 @@ from app import app, db
 
 # Define valid input for prediction test
 valid_input = {
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "accommodates": 4,
-    "neighbourhood_cleansed": "South Boston"
+    "salary_in_usd": 400000,
+    "remote_ratio": 0,
+    "company_location": "US",
+    "job_title": "AI Architect",
+    "work_year": 2025
 }
 
 # Define invalid neighborhood input for prediction test
-invalid_neighbourhood_input = {
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "accommodates": 4,
-    "neighbourhood_cleansed": "Invalid Neighborhood"
+invalid_job_input = {
+    "salary_in_usd": 400000,
+    "remote_ratio": 0,
+    "company_location": "US",
+    "job_title": "Invalid Job",
+    "work_year": 2025
 }
 
 # Define missing field input for prediction test
 missing_field_input = {
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "neighbourhood_cleansed": "South Boston"
+    "salary_in_usd": 400000,
+    "remote_ratio": 0,
+    "company_location": "US",
+    "job_title": "AI Architect",
 }
 
 
@@ -39,8 +42,8 @@ def test_reload_data(client):
     response = client.post('/reload')
     assert response.status_code == 200
     json_data = response.get_json()
-    assert 'total_listings' in json_data
-    assert 'average_price' in json_data
+    assert 'total_jobs' in json_data
+    assert 'average_salary' in json_data
 
 def test_predict_after_reload(client):
     """Test prediction endpoint after reloading the data."""
@@ -51,7 +54,7 @@ def test_predict_after_reload(client):
     response = client.post('/predict', json=valid_input)
     assert response.status_code == 200
     json_data = response.get_json()
-    assert 'predicted_price' in json_data
+    assert 'predicted_salary' in json_data
 
 
 def test_invalid_neighbourhood(client):
@@ -60,10 +63,10 @@ def test_invalid_neighbourhood(client):
     client.post('/reload')
 
     # Test invalid neighborhood
-    response = client.post('/predict', json=invalid_neighbourhood_input)
+    response = client.post('/predict', json=invalid_job_input)
     assert response.status_code == 400
     json_data = response.get_json()
-    assert "Invalid neighborhood" in json_data['error']
+    assert "Invalid job" in json_data['error']
 
 
 def test_missing_fields(client):
@@ -75,5 +78,6 @@ def test_missing_fields(client):
     response = client.post('/predict', json=missing_field_input)
     assert response.status_code == 400
     json_data = response.get_json()
-    assert "Invalid numeric values for bedrooms, bathrooms, or accommodates" in json_data['error']
+    assert "Invalid numeric values for remote_ratio or salary_in_usd" in json_data['error']
+
 
