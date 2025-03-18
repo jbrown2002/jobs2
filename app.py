@@ -51,11 +51,11 @@ def preprocess_data(df):
     
     # One-hot encode the 'company_location' column
     encoder2 = OneHotEncoder(sparse_output=False)
-    location_encoded = encoder.fit_transform(df[['company_location']])
+    location_encoded = encoder2.fit_transform(df[['company_location']])
 
     # Create a DataFrame for the one-hot encoded job titles and company locations
     jobs_encoded_df = pd.DataFrame(jobs_encoded, columns=encoder.get_feature_names_out(['job_title']))
-    locations_encoded_df = pd.DataFrame(location_encoded, columns=encoder.get_feature_names_out(['company_location']))
+    locations_encoded_df = pd.DataFrame(location_encoded, columns=encoder2.get_feature_names_out(['company_location']))
 
     # Concatenate the encoded job titles with the original dataframe and drop the 'job_title' column
     df = pd.concat([df, jobs_encoded_df, locations_encoded_df], axis=1).drop(columns=['job_title', 'company_location'])
@@ -108,8 +108,8 @@ def reload_data():
 
     # Step 5: Preprocess and train model
     df, encoder, encoder2 = preprocess_data(jobs)
-    X = df.drop(columns='salary')
-    y = df['salary']
+    X = df.drop(columns='salary_in_usd')
+    y = df['salary_in_usd']
     model = LinearRegression()
     model.fit(X, y)
 
@@ -171,11 +171,11 @@ def predict():
         year = data.get('work_year')
         location = data.get('company_location')
 
-        if None in [job_title, remote, location, year]:
+        if None in [jobs, remote, year, location]:
             return jsonify({"error": "Missing or invalid required parameters"}), 400
 
         # Check if the job title is valid
-        if job_title not in valid_jobs:
+        if jobs not in valid_jobs:
             return jsonify({"error": f"Invalid job title. Please choose one of the following: {', '.join(valid_jobs)}"}), 400
 
         # Transform the input using the global encoder
