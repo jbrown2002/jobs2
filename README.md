@@ -45,27 +45,16 @@ Before you can set up and run this app, ensure you have the following software i
 ### 1. Clone the Repository
 
 First, clone this repository to your local machine:
+
 ```bash
 git clone https://github.com/jbrown2002/jobs2.git
 cd jobs
 ```
 ### 2. 
-Second, download the data to your local device using this code:
 
-```bash
-pip install kaggle
-kaggle datasets download -d saurabhbadole/latest-data-science-job-salaries-2024
-```
-Note: To access this dataset, you will need a Kaggle account, which can be done at [Kaggle](https://www.kaggle.com/)
+Second, ** download ** the data to your local device from the files in this repository
 
-### 3. 
-Lastly, unzip the data file on your local device and read it into the API using this code:
-
-```bash
-unzip latest-data-science-job-salaries-2024.zip
-```
-
-### 4. Create a Virtual Environment (Optional but Recommended)
+### 3. Create a Virtual Environment (Optional but Recommended)
 
 You can create a virtual environment to isolate the project dependencies.
 
@@ -81,7 +70,7 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### 5. Install the Dependencies
+### 4. Install the Dependencies
 
 Install the required Python dependencies using `pip`:
 
@@ -89,7 +78,7 @@ Install the required Python dependencies using `pip`:
 pip install -r requirements.txt
 ```
 
-### 6. Set Up Environment Variables
+### 5. Set Up Environment Variables
 
 Flask requires some environment variables to run the app correctly. Create a `.env` file in the project root with the following content:
 
@@ -112,7 +101,7 @@ $env:FLASK_APP = "app.py"
 $env:FLASK_ENV = "development"
 ```
 
-### 7. Initialize the SQLite Database
+### 6. Initialize the SQLite Database
 
 To set up the SQLite database for the first time, run:
 
@@ -127,7 +116,7 @@ db.create_all()
 exit()
 ```
 
-### 8. Running the Application
+### 7. Running the Application
 
 Once everything is set up, you can run the application with the following command:
 
@@ -137,7 +126,7 @@ flask run
 
 By default, the app will run on [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-### 9. Swagger Documentation
+### 8. Swagger Documentation
 
 You can access the Swagger documentation for the API at:
 
@@ -145,7 +134,7 @@ You can access the Swagger documentation for the API at:
 http://127.0.0.1:5000/apidocs/
 ```
 
-### 10. Testing the Endpoints
+### 9. Testing the Endpoints
 
 #### Reload Data
 
@@ -170,7 +159,7 @@ curl -X POST http://127.0.0.1:5000/predict \
 }'
 ```
 
-### 11. Stopping the Application
+### 10. Stopping the Application
 
 To stop the Flask app, you can press `Ctrl + C` in the terminal window where the app is running.
 
