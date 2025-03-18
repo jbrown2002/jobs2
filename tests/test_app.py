@@ -57,12 +57,12 @@ def test_predict_after_reload(client):
     assert 'predicted_salary' in json_data
 
 
-def test_invalid_neighbourhood(client):
+def test_invalid_job(client):
     """Test prediction with an invalid neighbourhood."""
     # Reload the data first
     client.post('/reload')
 
-    # Test invalid neighborhood
+    # Test invalid job
     response = client.post('/predict', json=invalid_job_input)
     assert response.status_code == 400
     json_data = response.get_json()
