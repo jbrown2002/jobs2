@@ -177,6 +177,22 @@ To stop the Flask app, you can press `Ctrl + C` in the terminal window where the
 
 ---
 
+### How to Run the Streamlit Application
+
+### 1. Install Streamlit
+
+```bash
+pip install streamlit
+```
+
+### 2. Run the Application
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Note: Make sure the app.py is already running before doing this (see above section for running app.py)
+
 ## License
 
 This project is licensed under the MIT License.
